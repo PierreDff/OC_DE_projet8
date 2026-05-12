@@ -1,0 +1,22 @@
+# ============================================================
+# DBT profile - GreenCoop (mode "DBT hors Docker")
+# ============================================================
+# DBT tourne dans un venv Python local,
+# donc il atteint Postgres via localhost (port exposé par Docker).
+# Le mot de passe est lu depuis la variable d'environnement DBT_PASSWORD
+# définie dans le .env (jamais en clair ici, ce fichier est sur GitHub).
+
+greencoop:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: localhost
+      port: 5432
+      user: dbt
+      password: "{{ env_var('DBT_PASSWORD') }}"
+      dbname: greencoop_warehouse
+      schema: staging
+      threads: 4
+      keepalives_idle: 0
+      sslmode: prefer

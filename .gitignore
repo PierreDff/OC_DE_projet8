@@ -1,0 +1,29 @@
+# Variables sensibles
+.env
+
+# Environnement Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# DBT
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+dbt/.user.yml
+dbt/debug.log
+
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs (toutes positions)
+*.log
+logs/

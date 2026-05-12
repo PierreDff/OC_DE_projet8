@@ -1,0 +1,3 @@
+station_id,station_name,latitude,longitude,elevation_m,city,state,country,hardware,software
+ILAMAD25,La Madeleine,50.659,3.07,23,La Madeleine,,FR,other,EasyWeatherPro_V5.1.6
+IICHTE19,WeerstationBS,51.092,2.999,15,Ichtegem,,BE,other,EasyWeatherV1.6.6

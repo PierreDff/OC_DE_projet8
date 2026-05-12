@@ -1,0 +1,44 @@
+# ============================================================
+# Projet DBT - GreenCoop Forecast 2.0
+# ============================================================
+
+name: 'greencoop'
+version: '0.1.0'
+config-version: 2
+
+# Profil utilisé (doit correspondre à une entrée de ~/.dbt/profiles.yml)
+profile: 'greencoop'
+
+# Chemins du projet
+model-paths:    ["models"]
+analysis-paths: ["analyses"]
+test-paths:     ["tests"]
+seed-paths:     ["seeds"]
+macro-paths:    ["macros"]
+snapshot-paths: ["snapshots"]
+
+target-path:        "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+# Stratégie de matérialisation par couche
+# - staging      -> views   (nettoyage minimal, 1 source = 1 modèle)
+# - intermediate -> views   (jointures et logique métier, modèles de travail)
+# - marts        -> tables  (tables finales pour la Data Science)
+models:
+  greencoop:
+    staging:
+      +schema: staging
+      +materialized: view
+    intermediate:
+      +schema: intermediate
+      +materialized: view
+    marts:
+      +schema: marts
+      +materialized: table
+
+# Tests : on échoue dur en cas d'erreur de qualité (à ajuster ensuite)
+data_tests:
+  +severity: error
+  +store_failures: true

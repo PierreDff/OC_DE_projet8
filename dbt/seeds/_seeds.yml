@@ -1,0 +1,59 @@
+# ============================================================
+# Seeds DBT - Données de référence statiques
+# ============================================================
+# Les seeds sont des CSV chargés en tables PostgreSQL via 'dbt seed'.
+# On y met des données qui :
+#   - sont stables dans le temps (peu de modifications)
+#   - viennent d'une source externe au pipeline (mail, doc Ouly, etc.)
+#   - doivent être versionnées avec le code
+#
+# Pour wu_stations_metadata : ces infos ne sont PAS dans les données ingérées
+# par Airbyte. Elles proviennent du brief Mission d'Ouly. On les versionne en
+# CSV pour qu'elles soient reproductibles et auditables.
+
+version: 2
+
+seeds:
+  - name: wu_stations_metadata
+    description: >
+      Métadonnées des 2 stations Weather Underground (ILAMAD25 La Madeleine FR
+      et IICHTE19 Ichtegem BE). Source : brief de mission Ouly (cheffe projet
+      Forecast 2.0). Ces informations seront jointes aux observations WU dans
+      la couche intermediate puis exposées dans dim_weather_stations.
+
+    # On force les types pour éviter les devinettes de DBT et garantir une
+    # cohérence avec les autres modèles.
+    config:
+      column_types:
+        station_id:    varchar(20)
+        station_name:  varchar(100)
+        latitude:      numeric(8,5)
+        longitude:     numeric(8,5)
+        elevation_m:   numeric(7,2)
+        city:          varchar(100)
+        state:         varchar(50)
+        country:       varchar(2)
+        hardware:      varchar(50)
+        software:      varchar(50)
+
+    columns:
+      - name: station_id
+        description: "Identifiant unique de la station Weather Underground"
+      - name: station_name
+        description: "Nom usuel donné par le propriétaire de la station"
+      - name: latitude
+        description: "Latitude en degrés décimaux (WGS84)"
+      - name: longitude
+        description: "Longitude en degrés décimaux (WGS84)"
+      - name: elevation_m
+        description: "Altitude en mètres au-dessus du niveau de la mer"
+      - name: city
+        description: "Ville (déduite du nom de la station ou du contexte)"
+      - name: state
+        description: "État/région (vide pour la France et la Belgique)"
+      - name: country
+        description: "Code pays ISO 3166-1 alpha-2 (FR, BE)"
+      - name: hardware
+        description: "Marque/modèle de la station physique (rapporté par WU)"
+      - name: software
+        description: "Logiciel embarqué qui pousse les données vers WU"

@@ -1,0 +1,9 @@
+# DBT Core + adapter PostgreSQL
+# Versions épinglées (mineures) pour la reproductibilité
+dbt-core>=1.8,<1.9
+dbt-postgres>=1.8,<1.9
+
+# Utile pour pré-traiter les fichiers Excel WU avant ingestion
+# (on en aura besoin à l'étape suivante quand on s'attaquera à la couche raw)
+pandas>=2.2
+openpyxl>=3.1

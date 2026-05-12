@@ -1,0 +1,101 @@
+# ============================================================
+# Sources DBT - Tables RAW alimentées par Airbyte
+# ============================================================
+# Cette déclaration permet à DBT de connaître les tables d'origine
+# et de référencer leurs noms via la fonction {{ source('raw', '...') }}
+# dans les modèles staging.
+#
+# Avantages de la déclaration de sources :
+#   - DBT peut tracer le lineage complet (source -> staging -> intermediate -> marts)
+#   - Tests de fraîcheur (freshness) configurables par source
+#   - Documentation auto-générée par 'dbt docs'
+#   - Si un nom de table change, on ne corrige qu'ici (pas dans chaque modèle)
+
+version: 2
+
+sources:
+  - name: raw
+    description: >
+      Couche RAW : données brutes ingérées par Airbyte, sans transformation.
+      Cette couche n'est jamais modifiée par DBT (lecture seule via le rôle 'dbt').
+    database: greencoop_warehouse
+    schema: raw
+
+    # Tests de fraîcheur désactivés pour l'instant (ingestion ponctuelle pendant
+    # le développement). À activer quand on aura une sync planifiée :
+    #
+    # loaded_at_field: _airbyte_extracted_at
+    # freshness:
+    #   warn_after:  {count: 2, period: hour}
+    #   error_after: {count: 6, period: hour}
+
+    tables:
+      # ----------------------------------------------------------------
+      # Source 1 : InfoClimat (réseau professionnel + amateur français)
+      # ----------------------------------------------------------------
+      - name: raw_infoclimat
+        description: >
+          Données du réseau InfoClimat - 4 stations Hauts-de-France
+          (Lille-Lesquin, Armentières, Bergues, Hazebrouck).
+          Une seule ligne contenant le JSON brut de l'API. Il faudra
+          'exploser' les colonnes JSONB 'stations' et 'hourly' en couche staging.
+        columns:
+          - name: stations
+            description: "Array JSONB - métadonnées des 4 stations (id, nom, lat, lon, elevation, type)"
+          - name: hourly
+            description: "Dict JSONB - observations groupées par id_station (clé = station_id)"
+          - name: metadata
+            description: "Dict JSONB - unités de chaque champ (temperature -> degC, pression -> hPa, ...)"
+          - name: status
+            description: "Statut de l'API InfoClimat au moment de l'extraction (ex: 'OK')"
+          - name: _airbyte_extracted_at
+            description: "Horodatage d'extraction Airbyte (utile pour audit)"
+
+      # ----------------------------------------------------------------
+      # Source 2 : Weather Underground - Station La Madeleine (FR)
+      # ----------------------------------------------------------------
+      - name: raw_madeleine
+        description: >
+          Observations Weather Underground - station ILAMAD25 (La Madeleine, FR, 50.659°N 3.07°E).
+          Une ligne par mesure (~toutes les 5 min).
+          Valeurs en unités IMPÉRIALES stockées comme strings avec unité collée
+          (ex: '56.2 °F', '4.4 mph'). Espace insécable U+00A0 entre nombre et unité.
+          Heure locale Europe/Paris.
+        columns:
+          - name: Date
+            description: "Date au format YYYY-MM-DD (string, injectée par le script de consolidation)"
+          - name: Time
+            description: "Heure locale au format HH:MM:SS (Europe/Paris)"
+          - name: Temperature
+            description: "Température en degrés Fahrenheit (string : '56.2 °F')"
+          - name: Dew_Point
+            description: "Point de rosée en °F (string)"
+          - name: Humidity
+            description: "Humidité relative en % (string : '84 %')"
+          - name: Wind
+            description: "Direction du vent en cardinal (NNW, WSW, ...) - peut être NULL"
+          - name: Speed
+            description: "Vitesse moyenne du vent en mph (string)"
+          - name: Gust
+            description: "Vitesse de rafale en mph (string)"
+          - name: Pressure
+            description: "Pression en pouces de mercure (string : '29.75 in')"
+          - name: Precip__Rate_
+            description: "Taux de précipitation instantané en in/h (string)"
+          - name: Precip__Accum_
+            description: "Précipitations cumulées dans la journée en in (string)"
+          - name: UV
+            description: "Indice UV (numeric, déjà bien typé par Airbyte)"
+          - name: Solar
+            description: "Rayonnement solaire en W/m² (string : '0 w/m²')"
+
+      # ----------------------------------------------------------------
+      # Source 3 : Weather Underground - Station Ichtegem (BE)
+      # ----------------------------------------------------------------
+      - name: raw_ichtegem
+        description: >
+          Observations Weather Underground - station IICHTE19 (WeerstationBS, BE, 51.092°N 2.999°E).
+          Structure strictement identique à raw_madeleine.
+          Heure locale Europe/Brussels (= Europe/Paris).
+        # Structure colonnes identique à raw_madeleine, on ne re-documente pas
+        # ligne par ligne (la doc commune est portée par stg_wu__ichtegem).
